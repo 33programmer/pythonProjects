@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    {% load bootstrap3 %}
+
+  <script>
+$(document).ready(function(){
+
+
+
+    // select by Id
+    var new_button = "#new_button";
+    var cancel_button = "#cancel_button";
+    var table_content = "#table_content";
+    var appt_form = "#appt_form";
+    var form_content = "#form_content";
+
+
+    $(new_button).click(function(){
+        /*
+        * If new.clicked() -> Change to Add Value, Appear the Form, Appear the Cancel
+        * */
+        $(form_content).fadeIn();
+        $(cancel_button).fadeIn();
+
+
+        // Change value of Button
+        $(new_button).text("Add");
+
+
+    });
+
+
+    $(cancel_button).click(function(){
+         /*
+        * If cancel.clicked() -> Change Add to New Value, Disappear the Form, Disappear the Cancel
+        * */
+        $(form_content).fadeOut();
+        $(cancel_button).fadeOut();
+
+        // Change value of Button
+        $(new_button).text("New");
+
+
+    });
+
+
+    // if the search button is clicked
+    $("#search_button").click(function () {
+
+
+        // search value represents the query
+        getAppointments($("#search_value").val());
+
+    });
+
+
+
+    // AJAX and JSON are embedded in this function
+    function getAppointments(query){
+
+
+
+        //Empty any prexisting data from previous query
+        $(table_content).empty();
+
+        // get
+      $.ajax({
+            url: '/appt/search/',
+            datatype: 'json',
+            data: {'search_value': query
+            },
+            success: function (data) {
+                // type of string. Change to JSON Obect
+                var myJSON = JSON.parse(data.data)
+                var num_of_json_objects  = myJSON.length;
+
+                if(num_of_json_objects > 0){
+                     for(var x = 0; x< num_of_json_objects; x++) {
+                        var description = myJSON[x].fields.description;
+                        var day = myJSON[x].fields.day;
+                        var time = myJSON[x].fields.time;
+
+
+
+                        // Display in the table Day | Time | Description
+                        $(table_content).append("<tr><td>"+ day +
+                            "</td><td>"+ time +
+                            "</td><td>"+description+"</td></tr>");
+                    }
+
+                }else{
+                    console.log("No queries were found");
+                    $(table_content).html("<tr><td> N/A </td><td><td> N/A </td><td> N/A </td></tr>");
+
+                }
+
+        },error: function (context){
+                    alert('Something is wrong');
+            }
+      });
+
+
+    }
+
+});
+
+
+</script>
+
+</head>
+<body>
+
+
+<h2 class="text-center"> Appointment Maker </h2>
+
+<div class="container text-center">
+
+    <form class="form-signin" id="appt_form" method="post" action="">
+                {% csrf_token %}
+                <button class="btn btn-info" type="submit" id="new_button">New</button>
+               <input type="button" class="btn btn-info" id="cancel_button" value="Cancel" style="display:none;"/>
+
+               <div id="form_content" style="display:none">
+
+
+                 <input type="text" class="form-control" name='time' id="time" placeholder="Must follow H:MM e.g. 9:00" required />
+               <br>
+                   <input type="text" name="day" id="day" class="form-control" placeholder='Must follow this format {% now "Y-m-d" %}' required />
+               <br>
+
+                   <input type="text" name="description" id="description" class="form-control" placeholder="Describe the appointment" >
+               <br>
+
+               </div>
+
+
+            <!-- <button class="btn btn-lg btn-primary btn-block" type="submit">Submit the form</button> -->
+           </form>
+
+    <form class="form-signin" id="search_form" method="GET" action="{% url 'search' %}" style="display:block;">
+              {% csrf_token %}
+      <br>
+      <input type="text" name="search_value" id="search_value" class="form-control" placeholder="Search for something" required autofocus>
+      <br>
+      <button class="btn btn-sm btn-primary btn-block" type="button" id="search_button" >Search</button>
+    </form>
+
+
+      <div class="table-responsive">
+          <table class="table table-bordered table-hover table-striped tablesorter" id="table_of_appts">
+      <tr>
+          <th class="header"> Day <i class="icon-sort"></i></th>
+          <th class="header"> Time <i class="icon-sort"></i></th>
+          <th class="header"> Description <i class="icon-sort"></i></th>
+
+      <tbody id="table_content">
+      </tbody>
+  </table>
+
+      </div>
+</div>
+
+</body>
+</html>
